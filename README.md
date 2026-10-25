@@ -1,13 +1,10 @@
 # Telegram AutoCleaner
 
-Асинхронный бот на Python 3.12+ и aiogram 3 для очистки информационных групп.
-Сообщения участников удаляются по таймеру, сообщения администраторов и владельца
-сохраняются. Интерфейс полностью на русском языке.
+An asynchronous Telegram bot built with Python 3.12+ and aiogram 3. It removes group members' messages after a configurable delay while preserving messages from administrators and the group owner. The bot's user interface is in Russian.
 
-## Супергруппы с темами: версия 1.1
+## Forum topics (version 1.1)
 
-В форуме очистка ограничивается **одной выбранной темой**. Например, в супергруппе
-`music` откройте тему **«Информация»** и выполните именно внутри неё:
+In a forum supergroup, cleanup is restricted to **one explicitly selected topic**. To clean only the **Information** topic, open it and run these commands there:
 
 ```text
 /settime@kbIk_AutoCleaner_bot 30m
@@ -15,31 +12,19 @@
 /status@kbIk_AutoCleaner_bot
 ```
 
-В статусе появится **«Область: Только тема #…»**. Сообщения остальных тем, включая
-общую тему, не ставятся в очередь. Администраторы и закрепления защищаются так же,
-как раньше. В обычной группе без тем областью остаётся вся группа.
+The status should show `Scope: This topic only (#...)`. Messages from other topics, including General, are not queued. In a group without topics, cleanup covers the whole group.
 
-Для переноса очистки выполните `/enable` в другой теме: предыдущая очередь отменится,
-и будут обрабатываться только новые сообщения новой темы. Повторный `/enable` в той
-же теме сохраняет сроки очереди. `/disable` останавливает очистку и отменяет очередь
-этой супергруппы. Одна супергруппа может иметь одну активную тему очистки.
+To move cleanup, run `/enable` in a different topic. The previous queue is cancelled, and only new messages in the newly selected topic are processed. Running `/enable` again in the same topic preserves existing deadlines. `/disable` stops cleanup and cancels the group's queue. Only one topic per supergroup can be active at a time.
 
-При обнаружении тем в ранее настроенной группе очистка автоматически выключается,
-а старая очередь без сведений о теме отменяется. До явного выбора темы удалений
-не будет. Область проверяется и при приёме сообщения, и перед удалением; смена режима
-форума также останавливает очистку. Непроверяемый контекст темы сохраняется без удаления.
+When a previously configured group is detected as a forum, cleanup is disabled and the old queue (which has no topic information) is cancelled. Nothing is deleted until an administrator explicitly chooses a topic. Scope is checked both when a message is received and immediately before deletion. A forum-mode change also disables cleanup. If the topic context cannot be verified, the message is kept.
 
-ID темы берётся из настоящего Telegram-сообщения/панели, а не из введённого пользователем
-`chat_id` или callback-параметра. Ответы и панель отправляются в текущую тему.
-База автоматически обновляется со схемы 1 до схемы 2, настройки и статистика сохраняются.
+Topic IDs are taken from the actual Telegram message or panel, never from a user-supplied `chat_id` or callback parameter. Replies and settings panels stay in the current topic. The database migrates automatically from schema version 1 to version 2 while preserving settings and statistics.
 
-## Быстрый запуск на Windows 10/11
+## Quick start on Windows 10/11
 
-1. Установите Python 3.12 или новее с [python.org](https://www.python.org/downloads/).
-   При установке отметьте **Add Python to PATH**. Проверьте `python --version`.
-2. Распакуйте проект в постоянную папку, например `C:\Bots\AutoCleaner`.
-   Откройте PowerShell в этой папке.
-3. Создайте окружение и установите зависимости:
+1. Install Python 3.12 or later from [python.org](https://www.python.org/downloads/). Select **Add Python to PATH** in the installer and verify with `python --version`.
+2. Extract the project to a permanent folder, such as `C:\Bots\AutoCleaner`, and open PowerShell in that folder.
+3. Create a virtual environment and install the pinned dependencies:
 
    ```powershell
    python -m venv .venv
@@ -49,19 +34,15 @@ ID темы берётся из настоящего Telegram-сообщения
    notepad .env
    ```
 
-4. В Telegram откройте официального [@BotFather](https://t.me/BotFather), выполните
-   `/newbot`, задайте имя и username. Вставьте выданный токен в `BOT_TOKEN` файла `.env`.
-   Токен не нужно присылать кому-либо или указывать в командной строке.
-5. Запустите:
+4. Open the official [@BotFather](https://t.me/BotFather) in Telegram, run `/newbot`, and choose a bot name and username. Put the token from BotFather in `BOT_TOKEN` in `.env`. Never send the token to anyone or put it on a command line.
+5. Start the bot:
 
    ```powershell
    .\.venv\Scripts\python.exe run.py
    ```
 
-   Если окружение уже активировано, достаточно `python run.py`. Активация PowerShell
-   не обязательна, поэтому менять ExecutionPolicy не требуется.
-6. Добавьте бота в группу и назначьте администратором с разрешением **Удаление сообщений**.
-   От своего личного аккаунта администратора выполните в этой группе:
+   If the virtual environment is already active, `python run.py` is sufficient. PowerShell activation is optional; there is no need to change the ExecutionPolicy.
+6. Add the bot to the group and make it an administrator with **Delete messages** permission. From your own Telegram administrator account, run:
 
    ```text
    /settime 30m
@@ -69,142 +50,89 @@ ID темы берётся из настоящего Telegram-сообщения
    /settings
    ```
 
-По умолчанию очистка в каждой новой группе **выключена**. Без явного `/enable` удаления
-не происходят. Остановка: Ctrl+C. После запуска очередь восстанавливается из SQLite.
+Cleanup is **disabled by default** in every new group. Nothing is deleted until `/enable` is run. Stop the process with Ctrl+C. The pending queue is restored from SQLite after restart.
 
-## Получение сообщений и проверка прав
+## Receiving messages and checking permissions
 
-Бот должен оставаться администратором. Это позволяет получать сообщения участников
-и надёжнее использовать `getChatMember`. В BotFather можно выполнить `/setprivacy`,
-выбрать бота и установить **Disable**. При необходимости удалите и заново добавьте
-бота в группу после изменения privacy mode. Администраторы получают сообщения
-участников и при включённой приватности; статус администратора всё равно обязателен.
+The bot must remain an administrator. This allows it to receive group messages and makes `getChatMember` checks more reliable. In BotFather, you can run `/setprivacy`, select the bot, and choose **Disable**. If needed, remove and re-add the bot after changing the privacy setting. Administrators receive group messages even when privacy mode is enabled, but administrator status is still required.
 
-Все административные команды и каждое нажатие кнопки заново проверяют текущие права
-пользователя через Telegram API. Команды от имени группы/канала для управления
-не принимаются: отправляйте их от своего аккаунта. Через личные сообщения или
-подставленный `chat_id` управлять группой нельзя.
+Every administrative command and every button press rechecks the user's current permissions through the Telegram API. Commands sent on behalf of a group or channel are not accepted; send them from your personal account. A group cannot be managed through a private chat or a supplied `chat_id`.
 
-При потере прав очистка выключается, очередь группы отменяется. Бот отправляет
-предупреждение в группу, если у него осталось право отправки; личное уведомление
-администратору невозможно гарантировать, если тот не открывал личный диалог с ботом.
-После восстановления прав администратор выполняет `/enable`.
+If the bot loses its required permissions, cleanup is disabled and that group's queue is cancelled. The bot posts a warning in the group if it still has permission to send messages. A private notification cannot be guaranteed unless the administrator has opened a private chat with the bot. After restoring the permissions, an administrator must run `/enable` again.
 
-## Команды и панель
+## Commands and settings panel
 
-| Команда | Действие |
+| Command | Action |
 | --- | --- |
-| `/start` | Приветствие и ссылка добавления в группу; в группе — справка |
-| `/help` | Справка |
-| `/settings` | Панель с временем, состоянием, очередью и кнопками |
-| `/settime 30s` | Удалять новые сообщения через 30 секунд |
-| `/settime 5m` | Через 5 минут |
-| `/settime 1h` | Через 1 час |
-| `/enable` | Включить обработку новых сообщений |
-| `/disable` | Выключить очистку и отменить всю очередь этой группы |
-| `/status` | Состояние, разрешения, очередь и статистика |
+| `/start` | Greeting and group-add link; help when used in a group |
+| `/help` | Help |
+| `/settings` | Panel with delay, state, queue, and buttons |
+| `/settime 30s` | Delete new messages after 30 seconds |
+| `/settime 5m` | Delete after 5 minutes |
+| `/settime 1h` | Delete after 1 hour |
+| `/enable` | Enable cleanup for new messages |
+| `/disable` | Disable cleanup and cancel the group's queue |
+| `/status` | Show state, permissions, queue, and statistics |
 
-Диапазон: **10 секунд — 47 часов**. Допустим один целочисленный интервал с суффиксом
-`s`, `m` или `h`. Примеры: `45s`, `90m`, `47h`. Составные интервалы и дроби не принимаются.
-В панели доступны 30 секунд, 1/5/15/30 минут, 1/6/12/24 часа. Кнопки редактируют
-существующее сообщение. Все данные очереди и статистики доступны только администраторам.
+The allowed delay is **10 seconds to 47 hours**: one integer followed by `s`, `m`, or `h`, for example `45s`, `90m`, or `47h`. Compound and fractional intervals are rejected. The panel offers 30 seconds, 1/5/15/30 minutes, and 1/6/12/24 hours. Buttons edit the existing panel message. Queue details and statistics are visible only to administrators.
 
-Новая задержка не меняет сроки уже поставленных задач. Отсчёт идёт от времени отправки
-сообщения в Telegram, а не от момента получения ботом. После включения старые сообщения
-не сканируются и не добавляются, включая накопленные сообщения периода отключения.
-Из-за секундной точности даты Telegram сообщения в ту же секунду, что и включение,
-могут быть сохранены: пограничный случай обработан в пользу сохранения.
+Changing the delay does not change deadlines already in the queue. The timer starts from the Telegram message timestamp, not when the bot receives the update. On enable, older messages are not scanned or queued, including messages sent while cleanup was disabled. Telegram timestamps have one-second precision, so a message timestamped in the same second as enabling may be kept; this boundary case is handled conservatively.
 
-## Поддерживаемые сообщения
+## Supported messages and exclusions
 
-Текст, фото, видео, голосовые, видеосообщения, документы, стикеры, анимации, аудио,
-опросы, контакты, геопозиции и dice в группе. Пересылки и ответы обрабатываются по
-автору текущего сообщения. Каждый элемент альбома поступает отдельным сообщением
-и получает собственную задачу. Служебные и неизвестные типы игнорируются.
+Text, photos, videos, voice messages, video notes, documents, stickers, animations, audio, polls, contacts, locations, and dice are supported. Forwarded messages and replies are handled according to the author of the current message. Each item in an album is handled as a separate message and gets its own queue entry. Service messages and unknown message types are ignored.
 
-Сообщения самого бота, анонимных администраторов, сообщения от имени любых каналов
-и чатов сохраняются. Пользователь проверяется при получении и снова перед удалением:
-если он стал администратором/владельцем, задача отменяется. Если первоначальная проверка
-автора недоступна, сообщение сохраняется без постановки в очередь. Если автор уже
-поставленного сообщения не проверяется, используются ограниченные повторы, после
-которых сообщение остаётся в чате.
+Messages from the bot, anonymous administrators, channels, and chats are kept. A user's status is checked on receipt and again before deletion; if they have become an administrator or owner, the task is cancelled. If the sender cannot be checked initially, the message is not queued. If a queued sender cannot be checked later, the bot makes a limited number of retries and then keeps the message.
 
-## Закрепления и ограничения Telegram
+## Pinned messages and Telegram API limitations
 
-Обнаруженное событие закрепления исключает сообщение из очереди и сохраняет его ID
-в отдельной таблице защиты. Перед каждым удалением дополнительно вызывается `getChat`
-и защищается доступное последнее закреплённое сообщение. Защита сохраняется после
-перезапуска и консервативно действует даже после открепления. Перед запуском
-планировщика бот сначала обрабатывает доступные накопленные обновления.
+When the bot receives a pin event, it removes that message from the queue and records its ID in a separate protection table. Before every deletion, it also calls `getChat` and protects the latest pinned message visible to the Bot API. The protection survives restarts and remains in effect conservatively even after unpinning. Pending Telegram updates are processed before the scheduler starts.
 
-**Абсолютную защиту всех закреплений гарантировать нельзя.** Bot API не предоставляет
-полный список закреплённых сообщений или чтение произвольного сообщения по ID.
-Событие закрепления может не поступить; обновления хранятся Telegram не дольше 24 часов.
-Между проверкой и удалением также возможна смена прав автора или новое закрепление:
-API не предоставляет атомарного «проверить и удалить». Поэтому важные постоянные
-объявления следует публиковать от администратора. При необходимости закрепить
-сообщение участника сначала выполните `/disable`, затем закрепите и включите очистку
-заново: отменённая очередь не восстанавливается.
+**Telegram does not allow the bot to guarantee protection for every pinned message.** The Bot API does not expose a complete list of pinned messages or allow reading an arbitrary message by ID. A pin event may not arrive, and Telegram retains updates for no more than 24 hours. Permissions or pin status can also change between the check and deletion; the API has no atomic “check and delete” operation. Publish important permanent announcements as an administrator. To pin a member's message, run `/disable` first, pin it, then enable cleanup again. The cancelled queue is not restored.
 
-Сообщения старше 48 часов Telegram обычно не удаляет. Бот использует запас 60 секунд
-и окончательно снимает просроченные задачи. Фактическое удаление может задержаться
-из-за нагрузки, сети или лимитов API.
+Telegram generally refuses to delete messages older than 48 hours. The bot uses a 60-second safety margin and discards expired tasks. Actual deletion may be delayed by load, network conditions, or API limits.
 
-При переходе группы в супергруппу переносятся настройки и статистика, обрабатываются
-оба служебных события миграции и ответ `TelegramMigrateToChat`. Задачи старого чата
-отменяются: старые `message_id` нельзя безопасно подставлять в новый чат. Очистка
-новых сообщений продолжает работать с новым `chat_id`. Это намеренное сохранение
-старых сообщений при миграции.
+When a group migrates to a supergroup, settings and statistics are carried over, and both migration service events and `TelegramMigrateToChat` are handled. Tasks for the old chat are cancelled because old `message_id` values cannot safely be used in the new chat. Cleanup continues for new messages using the new `chat_id`; old messages are intentionally left untouched.
 
-Бот не восстанавливает историю, которую Telegram не прислал, и не является средством
-архивирования. Не используйте одновременно другой экземпляр с тем же токеном.
+The bot cannot recover history that Telegram did not send and is not an archive. Do not run multiple instances with the same token.
 
-## Конфигурация
+## Configuration
 
-Файл `.env` читается только из корня этого проекта, независимо от текущей директории.
-`BOT_TOKEN` берётся только из этого файла. Остальные значения также читаются из `.env`.
-Относительные пути разрешаются относительно корня проекта.
+The bot reads `.env` from the project root regardless of the current working directory. `BOT_TOKEN` is read only from this file. Other values are also loaded from `.env`; relative paths are resolved from the project root.
 
-| Параметр | По умолчанию | Назначение |
+| Variable | Default | Description |
 | --- | --- | --- |
-| `BOT_TOKEN` | обязательный | Токен из BotFather |
-| `DATABASE_PATH` | `data/autocleaner.db` | SQLite на локальном диске |
-| `LOG_LEVEL` | `INFO` | Уровень логов |
-| `DEFAULT_DELETE_DELAY` | `1800` | Задержка для новых групп, секунды |
-| `LOG_PATH` | `logs/autocleaner.log` | Файл логов |
-| `POLL_INTERVAL` | `1` | Интервал проверки очереди, 0.1–60 с |
-| `BATCH_SIZE` | `30` | Максимальный пакет, 1–100 задач |
-| `MAX_CONCURRENT_DELETIONS` | `3` | Число параллельных обработчиков, 1–10 |
-| `MAX_ATTEMPTS` | `5` | Максимум неудачных попыток, 1–20 |
-| `API_REQUESTS_PER_SECOND` | `15` | Общий темп API-запросов, 0.1–25 |
+| `BOT_TOKEN` | required | Token from BotFather |
+| `DATABASE_PATH` | `data/autocleaner.db` | Local SQLite database path |
+| `LOG_LEVEL` | `INFO` | Logging level |
+| `DEFAULT_DELETE_DELAY` | `1800` | Default delay for new groups, in seconds |
+| `LOG_PATH` | `logs/autocleaner.log` | Log file path |
+| `POLL_INTERVAL` | `1` | Queue polling interval, 0.1–60 seconds |
+| `BATCH_SIZE` | `30` | Maximum batch size, 1–100 tasks |
+| `MAX_CONCURRENT_DELETIONS` | `3` | Concurrent workers, 1–10 |
+| `MAX_ATTEMPTS` | `5` | Maximum failed attempts, 1–20 |
+| `API_REQUESTS_PER_SECOND` | `15` | Shared API request rate, 0.1–25 |
 
-Основные стабильные зависимости зафиксированы в `requirements.txt`; полный набор
-транзитивных зависимостей с SHA-256 — в `requirements-lock.txt`. Для обычной установки
-рекомендуется lock-файл. Возможна и установка `pip install -r requirements.txt`.
-При обновлении зависимостей пересоздайте lock-файл и выполните тесты.
+Direct dependencies are listed in `requirements.txt`; the complete transitive dependency set and SHA-256 hashes are pinned in `requirements-lock.txt`. The lock file is recommended for installation. You can also install with `pip install -r requirements.txt`. Regenerate the lock file and run the test suite when updating dependencies.
 
-`.env`, SQLite и логи исключены из Git. Не публикуйте `.env`. В базе нет текстов,
-медиа и подписей: хранятся ID, время, настройки, счётчики и безопасные коды ошибок.
-Название группы хранится для интерфейса. Логи содержат технические события и ID,
-но не содержимое сообщений, токены или необработанные исключения API.
-Ротация: до пяти архивов по 5 МиБ и один текущий файл.
+`.env`, SQLite databases, and logs are excluded from Git. Never publish `.env`. The database stores no message text, media, or captions; it stores IDs, timestamps, settings, counters, and safe error codes. The group title is stored for the interface. Logs contain operational events and IDs, but no message content, tokens, or raw API exceptions. Log rotation keeps up to five 5 MiB archives plus the current file.
 
-## Устройство и надёжность
+## Project layout and reliability
 
 ```text
 AutoCleaner/
 ├── bot/
-│   ├── main.py                  # Жизненный цикл и long polling
-│   ├── config.py                # .env и проверка параметров
-│   ├── handlers/                # Команды, callbacks, сообщения, права бота
-│   ├── keyboards/               # InlineKeyboard
-│   ├── services/                # Проверки прав, удаление, планировщик, API limiter
-│   ├── database/                # SQLite, транзакции, репозитории
-│   └── utils/                   # Время, логи и блокировка процесса
-├── tests/                       # Тесты без настоящего Telegram
+│   ├── main.py                  # Lifecycle and long polling
+│   ├── config.py                # .env loading and validation
+│   ├── handlers/                # Commands, callbacks, messages, bot permissions
+│   ├── keyboards/               # Inline keyboards
+│   ├── services/                # Permission checks, cleanup, scheduler, API limiter
+│   ├── database/                # SQLite, transactions, repositories
+│   └── utils/                   # Time, logging, and process lock
+├── tests/                       # Tests without a live Telegram bot
 ├── deploy/autocleaner.service
-├── data/                        # Создаётся автоматически
-├── logs/                        # Создаётся автоматически
+├── data/                        # Created automatically
+├── logs/                        # Created automatically
 ├── .env.example
 ├── requirements.txt
 ├── requirements-lock.txt
@@ -213,34 +141,17 @@ AutoCleaner/
 └── run.py
 ```
 
-Очередь хранится в SQLite с WAL, внешними ключами, уникальной парой `(chat_id,message_id)`
-и индексом сроков. Изменения настроек, отмена очереди и обновления счётчиков выполняются
-в транзакциях. Время — UTC Unix timestamp. База создаётся автоматически, схема имеет версию.
-Один процесс обслуживает несколько независимых групп. Блокировка файла рядом с базой
-предотвращает запуск двух экземпляров на одной базе; блокировка снимается ОС при сбое.
-Разные базы/компьютеры с одним токеном не поддерживаются. SQLite должен находиться
-на локальном диске, а не на сетевой файловой системе.
+The queue is stored in SQLite with WAL mode, foreign keys, a unique `(chat_id, message_id)` pair, and a deadline index. Settings changes, queue cancellation, and counter updates use transactions. Timestamps are UTC Unix time, and the schema is versioned and created automatically. One process can serve multiple independent groups. A lock file beside the database prevents two processes from using the same database; the operating system releases the lock after a crash. Multiple databases or computers using the same token are not supported. Keep SQLite on a local disk, not a network filesystem.
 
-Планировщик читает небольшие пакеты, не создаёт спящий task на каждое сообщение.
-Число одновременных удалений ограничено, общий API limiter ограничивает темп и
-параллелизм всех запросов, включая команды. `RetryAfter` сдвигает срок задачи и
-включает общую паузу. Сетевые/серверные ошибки повторяются с увеличением интервала.
-После исчерпания лимита сообщение сохраняется, задача снимается. Ошибка одной задачи
-не останавливает обработку остальных. Блокировка группы согласует удаление, отключение
-и закрепление; после завершения `/disable` ожидающие задачи больше не выполняются.
+The scheduler reads small batches and does not create a sleeping task for every message. Concurrent deletions are bounded, and a shared API limiter controls both rate and concurrency, including command requests. `RetryAfter` postpones the affected task and activates a shared cooldown. Network and server errors are retried with increasing delays. When attempts are exhausted, the message is kept and the task is removed. A failure in one task does not stop the others. A per-group lock coordinates deletion with disabling cleanup and pin protection; once `/disable` completes, queued deletions for that group no longer run.
 
-Счётчик удалений увеличивается только после успешного `deleteMessage`; отсутствие
-уже удалённого сообщения считается пропуском. `failed_count` считает окончательно
-необработанные задачи, включая просрочку и исчерпанные повторы. Отмена очистки,
-повышение автора, закрепление и отсутствие сообщения не увеличивают этот счётчик.
+The deletion counter increments only after `deleteMessage` succeeds; a message that is already gone counts as skipped. `failed_count` counts tasks that ultimately could not be processed, including expired tasks and exhausted retries. Cancellation, an administrator promotion, a pin, or an already-missing message does not increase that counter.
 
-При аварии между успешным Telegram-запросом и фиксацией SQLite возможен повтор
-идемпотентного удаления. Очередь сохранится, но успешное удаление может не попасть
-в счётчик. Атомарная транзакция между Telegram и локальной SQLite невозможна.
+If the process crashes after a successful Telegram request but before the SQLite update, the idempotent deletion may be attempted again. The queue survives, but the successful deletion may not appear in the counter. A transaction spanning Telegram and local SQLite is not possible.
 
-## Запуск на Linux
+## Run on Linux
 
-Установите Python 3.12+ и пакет venv средствами своего дистрибутива. Далее:
+Install Python 3.12+ and your distribution's venv package, then run:
 
 ```bash
 cd /path/to/AutoCleaner
@@ -253,14 +164,14 @@ nano .env
 .venv/bin/python run.py
 ```
 
-### Работа 24/7 через systemd
+### Run continuously with systemd
 
-Пример предполагает проект в `/opt/autocleaner` и выделенного пользователя:
+This example uses `/opt/autocleaner` and a dedicated user:
 
 ```bash
 sudo useradd --system --home /opt/autocleaner --shell /usr/sbin/nologin autocleaner
 sudo mkdir -p /opt/autocleaner
-# Скопируйте содержимое проекта в /opt/autocleaner, настройте .env и создайте .venv.
+# Copy the project to /opt/autocleaner, configure .env, and create .venv.
 sudo mkdir -p /opt/autocleaner/data /opt/autocleaner/logs
 sudo chown -R root:autocleaner /opt/autocleaner
 sudo chmod 640 /opt/autocleaner/.env
@@ -272,32 +183,21 @@ sudo systemctl status autocleaner
 sudo journalctl -u autocleaner -f
 ```
 
-Unit перезапускает процесс при ошибке и разрешает запись только в `data/` и `logs/`.
-Пути из `.env` должны соответствовать этим каталогам. При других путях измените
-`ReadWritePaths`. После изменения `.env`: `sudo systemctl restart autocleaner`.
-Python из venv должен быть доступен служебному пользователю и не находиться в `/home`,
-который закрыт параметром `ProtectHome`.
+The unit restarts the process after a failure and allows writes only to `data/` and `logs/`. Paths in `.env` must match these directories; adjust `ReadWritePaths` if they differ. After changing `.env`, run `sudo systemctl restart autocleaner`. The virtual-environment Python must be accessible to the service user and must not be under `/home`, which is restricted by `ProtectHome`.
 
-### Работа 24/7 на Windows
+### Run continuously on Windows
 
-В Планировщике заданий создайте задачу с триггером **При запуске компьютера**,
-параметром **Выполнять вне зависимости от регистрации пользователя** и действием:
+In Task Scheduler, create a task triggered **At system startup**, set it to run whether or not a user is logged in, and use:
 
-- Программа: `C:\Bots\AutoCleaner\.venv\Scripts\python.exe`
-- Аргументы: `C:\Bots\AutoCleaner\run.py`
-- Рабочая папка: `C:\Bots\AutoCleaner`
+- Program: `C:\Bots\AutoCleaner\.venv\Scripts\python.exe`
+- Arguments: `C:\Bots\AutoCleaner\run.py`
+- Start in: `C:\Bots\AutoCleaner`
 
-Включите перезапуск при сбое через минуту, отключите лимит времени выполнения,
-выберите **Не запускать новый экземпляр**, если задача уже выполняется. Пользователь
-задачи должен читать `.env` и писать в `data/` и `logs/`. Компьютер должен оставаться
-включённым, без сна, с доступом к Telegram. Возможен запуск как службы через WinSW;
-на постоянно включённом Linux-сервере используйте systemd.
+Configure a one-minute restart after failure, disable the execution time limit, and select **Do not start a new instance** if the task is already running. The task account must be able to read `.env` and write to `data/` and `logs/`. Keep the computer powered on, awake, and connected to Telegram. WinSW can also run the bot as a service; on an always-on Linux server, use systemd.
 
-Перед резервным копированием остановите бота и скопируйте `data/` вместе с
-`.env` в защищённое место. Не копируйте только основной `.db` работающего SQLite
-без WAL: остановка обеспечивает согласованную резервную копию.
+Stop the bot before making a backup, then copy `data/` and `.env` to a secure location. Do not copy only the main `.db` file from a running SQLite database without its WAL; stopping the bot ensures a consistent backup.
 
-## Тесты и локальная проверка
+## Tests and local checks
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -308,42 +208,34 @@ python -m ruff format --check .
 python -m pip check
 ```
 
-Тесты используют подменённую HTTP-сессию Telegram и реальные временные базы SQLite.
-Ни один тест не требует токена, сети или настоящей группы. Проверяются критические
-сценарии ТЗ, маршрутизация команд/callbacks и запуск/завершение. Результаты сборки
-приведены в `TEST_REPORT.md`. Реальная группа и Linux systemd в этом окружении
-не проверялись.
+Tests use a mocked Telegram HTTP session and real temporary SQLite databases. No test requires a token, network access, or a live group. They cover the critical requirements, command/callback routing, and startup/shutdown. Results are in `TEST_REPORT.md`. A real group and Linux systemd were not tested in this environment.
 
-Перед использованием в учебном чате проверьте в отдельной тестовой группе:
-`/settime 10s`, `/enable`, сообщение участника, сообщение администратора, фотоальбом,
-`/status`, перезапуск с ожидающим сообщением и `/disable`. Затем установите нужное время.
+Before using the bot in a real group, test it in a separate test group: `/settime 10s`, `/enable`, a member message, an administrator message, a photo album, `/status`, a restart with a pending message, and `/disable`. Then set the intended delay.
 
-## Типичные проблемы
+## Troubleshooting
 
-| Симптом | Что проверить |
+| Symptom | What to check |
 | --- | --- |
-| Процесс сразу завершился | Python 3.12+, зависимости, наличие `.env`, формат токена, сеть и права на каталоги |
-| Не получает сообщения участников | Бот — администратор; проверьте BotFather privacy mode, заново добавьте бота |
-| Ничего не удаляется | `/status`, затем права удаления и `/enable`; старые сообщения не обрабатываются |
-| Сообщение сохранилось | Автор администратор, неизвестен автор, закрепление, непроверяемые права, просрочка или исчерпаны повторы |
-| Удаление происходит позднее | Нагрузка очереди, лимиты API, временная сеть; проверьте логи и `/status` |
-| `permissions_lost` в логе | Восстановите права, выполните `/enable`; старая очередь отменена |
-| `worker_error` / `scheduler_error` | Свободное место, права SQLite, локальный диск; исправьте причину и перезапустите |
-| Второй экземпляр не запускается | Остановите старый процесс; не удаляйте lock-файл работающего процесса |
-| Polling не работает или конфликтует | Остановите другие процессы с тем же токеном; webhook удаляется при запуске без сброса обновлений |
-| После долгого простоя часть истории пропущена | Telegram хранит обновления до 24 часов; сообщения с истёкшим сроком остаются |
+| Process exits immediately | Python 3.12+, dependencies, `.env`, token format, network, and directory permissions |
+| Member messages are not received | Bot administrator status; check BotFather privacy mode and re-add the bot |
+| Nothing is deleted | `/status`, delete permission, and `/enable`; old messages are not processed |
+| A message was kept | Sender is an administrator or unknown, it is pinned, permissions could not be checked, it expired, or retries were exhausted |
+| Deletion is late | Queue load, API limits, or temporary network issues; check logs and `/status` |
+| `permissions_lost` in the log | Restore permissions and run `/enable`; the old queue was cancelled |
+| `worker_error` / `scheduler_error` | Disk space, SQLite permissions, and local disk; fix the cause and restart |
+| A second instance will not start | Stop the old process; do not remove a lock file while its process is running |
+| Polling fails or conflicts | Stop other processes using the token; startup removes the webhook without discarding updates |
+| Some history is missing after a long outage | Telegram retains updates for up to 24 hours; expired messages are kept |
 
-При неверном/отозванном токене получите новый у BotFather и замените его в `.env`.
-При долгой недоступности сети служба завершит первоначальный запуск и systemd/задача
-Windows повторит его; после успешного старта aiogram повторяет long polling автоматически.
+If a token is invalid or revoked, obtain a new one from BotFather and replace it in `.env`. During a long network outage, the service may exit during initial startup and systemd/Task Scheduler will retry it. After a successful start, aiogram retries long polling automatically.
 
-## Документация, использованная при разработке
+## Development references
 
-Проверено 25 октября 2026 года:
+Documentation checked on October 25, 2026:
 
-- [aiogram 3.31: Dispatcher и long polling](https://docs.aiogram.dev/en/latest/dispatcher/dispatcher.html)
+- [aiogram 3.31: Dispatcher and long polling](https://docs.aiogram.dev/en/latest/dispatcher/dispatcher.html)
 - [Telegram Bot API: deleteMessage](https://core.telegram.org/bots/api#deletemessage)
 - [Telegram Bot API: getChatMember](https://core.telegram.org/bots/api#getchatmember)
-- [Telegram Bot API: ChatFullInfo и последнее закрепление](https://core.telegram.org/bots/api#chatfullinfo)
-- [Telegram Bot API: получение обновлений](https://core.telegram.org/bots/api#getting-updates)
-- [Telegram FAQ: сообщения и privacy mode](https://core.telegram.org/bots/faq#what-messages-will-my-bot-get)
+- [Telegram Bot API: ChatFullInfo and the latest pinned message](https://core.telegram.org/bots/api#chatfullinfo)
+- [Telegram Bot API: receiving updates](https://core.telegram.org/bots/api#getting-updates)
+- [Telegram FAQ: messages and privacy mode](https://core.telegram.org/bots/faq#what-messages-will-my-bot-get)
